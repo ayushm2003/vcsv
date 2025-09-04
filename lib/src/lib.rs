@@ -1,6 +1,6 @@
 use alloy_sol_types::sol;
-use serde::{Serialize, Deserialize};
 use clap::ValueEnum;
+use serde::{Deserialize, Serialize};
 
 #[derive(ValueEnum, Clone, Debug, Serialize, Deserialize)]
 pub enum Op {
