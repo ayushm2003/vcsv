@@ -1,0 +1,12 @@
+[package]
+version = "0.1.0"
+name = "vcsv-program"
+edition = "2021"
+
+[dependencies]
+alloy-sol-types = { workspace = true }
+sp1-zkvm = "5.0.8"
+tiny-keccak = { version = "2.0.2", default-features = false }
+vcsv-lib = { path = "../lib" }
+serde = { version = "1.0.200", default-features = false, features = ["derive"] }
+clap = { version = "4.0", features = ["derive"] }
