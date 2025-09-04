@@ -5,7 +5,7 @@
 use alloy_sol_types::SolType;
 use sp1_sdk::{include_elf, ProverClient, SP1Stdin};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use vcsv_lib::{Input, Op, PublicValues};
 
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
@@ -45,7 +45,7 @@ pub fn execute(file: PathBuf, op: Op, col: String) {
 }
 
 /// Generate a proof for the CSV program
-pub fn proof(file: PathBuf, op: Op, col: String, _out: PathBuf) {
+pub fn proof(file: PathBuf, op: Op, col: String, out: PathBuf) {
     let client = ProverClient::from_env();
     let mut stdin = SP1Stdin::new();
 
@@ -67,8 +67,21 @@ pub fn proof(file: PathBuf, op: Op, col: String, _out: PathBuf) {
         .expect("failed to generate proof");
 
     println!("Successfully generated proof!");
-	// println!("proof: {:?}", proof);
 
-    client.verify(&proof, &vk).expect("failed to verify proof");
-    println!("Successfully verified proof!");
+	let proof = serde_json::to_vec_pretty(&proof).unwrap();
+	fs::write(out, proof);
+
+    // client.verify(&proof, &vk).expect("failed to verify proof");
+    // println!("Successfully verified proof!");
+}
+
+pub fn verify(file: PathBuf) {
+	let client = ProverClient::from_env();
+    let (pk, vk) = client.setup(VCSV_ELF);
+
+	let proof = fs::read(file).unwrap();
+	let proof = serde_json::from_slice(&proof).unwrap();
+
+	client.verify(&proof, &vk).expect("failed to verify proof");
+	println!("Successfully verified proof!");
 }

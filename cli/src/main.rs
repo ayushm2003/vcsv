@@ -1,7 +1,7 @@
 use clap::{Args, Parser, Subcommand};
 use std::path::PathBuf;
 use vcsv_lib::Op;
-use vcsv_script::{execute, proof};
+use vcsv_script::{execute, proof, verify};
 
 #[derive(Parser)]
 #[command(name = "vcsv", version, about = "Verifiable CSV analytics")]
@@ -14,7 +14,7 @@ struct Cli {
 pub enum Command {
     Execute(ExecuteArgs),
     Prove(ProveArgs),
-    // Verify(VerifyArgs),
+    Verify(VerifyArgs),
 }
 
 #[derive(Args, Debug)]
@@ -39,11 +39,11 @@ pub struct ProveArgs {
     pub out: PathBuf,
 }
 
-// #[derive(Args, Debug)]
-// pub struct VerifyArgs {
-//     #[arg(long)]
-//     pub proof: PathBuf,
-// }
+#[derive(Args, Debug)]
+pub struct VerifyArgs {
+    #[arg(long, default_value = "proof.json")]
+    pub proof: PathBuf,
+}
 
 fn main() {
     let args = Cli::parse();
@@ -52,5 +52,6 @@ fn main() {
     match args.cmd {
         Command::Execute(ex_args) => execute(ex_args.file, ex_args.ops, ex_args.col),
         Command::Prove(pr_args) => proof(pr_args.file, pr_args.ops, pr_args.col, pr_args.out),
+		Command::Verify(vr_args) => verify(vr_args.proof),
     }
 }
