@@ -9,8 +9,7 @@
 sp1_zkvm::entrypoint!(main);
 
 use alloy_sol_types::SolType;
-use tiny_keccak::{Hasher, Keccak};
-use vcsv_lib::{Input, Op, PublicValues};
+use vcsv_lib::{hash, parse_csv, Csv, Input, Op, PublicValues};
 
 pub fn main() {
     // Read an input to the program.
@@ -19,27 +18,14 @@ pub fn main() {
     // from the prover.
     let Input { csv, col, op } = sp1_zkvm::io::read::<Input>();
 
-    let mut keccak = Keccak::v256();
-    keccak.update(&csv);
-    let mut file_hash = [0u8; 32];
-    keccak.finalize(&mut file_hash);
+    let file_hash = hash(&csv);
 
-    // parse csv
-    let s = core::str::from_utf8(&csv).expect("csv not utf8");
-    let mut lines = s.split("\n");
-
-    let headers = lines.next().expect("empty csv");
-    let cols = headers.split(",").map(trim_ascii);
-    let mut target_idx = None;
-
-    for (i, name) in cols.enumerate() {
-        if name == col {
-            target_idx = Some(i);
-            break;
-        }
-    }
-
-    let idx = target_idx.expect("col not found");
+    let Csv {
+        lines,
+        headers,
+        cols,
+        idx,
+    } = parse_csv(csv, &col);
 
     let mut n_rows: u64 = 0;
     let mut sum: i128 = 0;
@@ -49,8 +35,7 @@ pub fn main() {
             continue;
         }
         n_rows += 1;
-        let mut it = line.split(',').map(trim_ascii);
-        let val_str = it.nth(idx).expect("missing field");
+        let val_str = &line[idx];
         let v: i128 = parse_i128(val_str);
 
         sum = sum.checked_add(v).expect("sum overflow");
@@ -62,10 +47,7 @@ pub fn main() {
     };
 
     let col_bytes = col.as_bytes();
-    let mut col_hash = [0u8; 32];
-    let mut keccak = Keccak::v256();
-    keccak.update(col_bytes);
-    keccak.finalize(&mut col_hash);
+    let mut col_hash = hash(col_bytes);
 
     let public = PublicValues {
         fileHash: file_hash.into(),
@@ -84,18 +66,6 @@ pub fn main() {
 }
 
 // helpers
-fn trim_ascii(s: &str) -> &str {
-    let bytes = s.as_bytes();
-    let mut i = 0;
-    let mut j = bytes.len();
-    while i < j && bytes[i].is_ascii_whitespace() {
-        i += 1;
-    }
-    while j > i && bytes[j - 1].is_ascii_whitespace() {
-        j -= 1;
-    }
-    unsafe { core::str::from_utf8_unchecked(&bytes[i..j]) }
-}
 
 fn parse_i128(s: &str) -> i128 {
     // no floats, no underscores; optional leading '-'

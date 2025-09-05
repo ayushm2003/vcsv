@@ -5163,6 +5163,7 @@ dependencies = [
  "alloy-sol-types",
  "clap",
  "serde",
+ "tiny-keccak",
 ]
 
 [[package]]
