@@ -32,7 +32,40 @@ sol! {
         bytes32 colHash;
         uint64 n_rows;
         int128 result;
+        uint16 decimal_points;
     }
+}
+
+pub fn sum_col(csv: &Csv) -> (u64, i128, u16) {
+    let mut n_rows: u64 = 0;
+    let mut sum: i128 = 0;
+
+    for line in &csv.lines {
+        if line.is_empty() {
+            continue;
+        }
+        n_rows += 1;
+        let val_str = &line[csv.idx];
+        let v: i128 = parse_i128(val_str);
+        sum = sum.checked_add(v).expect("sum overflow");
+    }
+
+    (n_rows, sum, 0)
+}
+
+pub fn mean_col(csv: &Csv) -> (u64, i128, u16) {
+    let (n_rows, sum, _) = sum_col(csv);
+
+    if n_rows == 0 {
+        return (0, 0, 0); // TODO: handle error better
+    }
+
+    let decimal: u16 = 3;
+    let multiplier = 10_i128.pow(decimal as u32);
+    let mean_float = (sum as f64 * multiplier as f64) / (n_rows as f64);
+    let mean_scaled = mean_float.round() as i128;
+
+    (n_rows, mean_scaled, decimal)
 }
 
 pub fn hash(s: &[u8]) -> [u8; 32] {
@@ -98,4 +131,43 @@ pub fn trim_ascii(s: &str) -> &str {
         j -= 1;
     }
     unsafe { core::str::from_utf8_unchecked(&bytes[i..j]) }
+}
+
+pub fn op_to_u8(op: Op) -> u8 {
+    match op {
+        Op::Sum => 0,
+        Op::Mean => 1,
+        Op::Median => 2,
+        Op::Hash => 3,
+    }
+}
+
+fn parse_i128(s: &str) -> i128 {
+    // no floats, no underscores; optional leading '-'
+    // tiny, deterministic parser to avoid locale/float issues
+    let b = s.as_bytes();
+    let mut i = 0usize;
+    let neg = if !b.is_empty() && b[0] == b'-' {
+        i = 1;
+        true
+    } else {
+        false
+    };
+    let mut acc: i128 = 0;
+    while i < b.len() {
+        let d = b[i];
+        if d < b'0' || d > b'9' {
+            panic!("non-digit in integer");
+        }
+        acc = acc
+            .checked_mul(10)
+            .and_then(|x| x.checked_add((d - b'0') as i128))
+            .expect("int overflow");
+        i += 1;
+    }
+    if neg {
+        -acc
+    } else {
+        acc
+    }
 }

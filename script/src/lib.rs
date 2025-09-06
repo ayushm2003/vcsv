@@ -35,13 +35,18 @@ pub fn execute(file: PathBuf, op: Op, col: String) {
         colHash,
         n_rows,
         result,
+        decimal_points,
     } = decoded;
 
     println!("fileHash: {:?}", fileHash);
     println!("op: {:?}", op);
     println!("colHash: {:?}", colHash);
     println!("n_rows: {:?}", n_rows);
-    println!("result: {:?}", result);
+    println!(
+        "result: {:?}",
+        result as f64 / 10_f64.powf(decimal_points as f64)
+    );
+    println!("decimal points: {:?}", decimal_points);
 }
 
 /// Generate a proof for the CSV program
