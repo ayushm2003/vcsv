@@ -54,15 +54,15 @@ fn main() {
     println!("cmd={:?}", args.cmd);
 
     match args.cmd {
-        Command::Execute(ex_args) => execute(ex_args.file, ex_args.ops, ex_args.col),
-        Command::Prove(pr_args) => proof(
-            pr_args.file,
-            pr_args.ops,
-            pr_args.col,
-            pr_args.out,
-            pr_args.backend,
-            pr_args.pkey,
+        Command::Execute(args) => execute(args.file, args.ops, args.col),
+        Command::Prove(args) => proof(
+            args.file,
+            args.ops,
+            args.col,
+            args.out,
+            args.backend,
+            args.pkey,
         ),
-        Command::Verify(vr_args) => verify(vr_args.proof),
+        Command::Verify(args) => verify(args.proof),
     }
 }

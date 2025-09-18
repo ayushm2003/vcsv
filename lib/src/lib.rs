@@ -149,8 +149,6 @@ pub fn op_to_u8(op: Op) -> u8 {
 }
 
 fn parse_i128(s: &str) -> i128 {
-    // no floats, no underscores; optional leading '-'
-    // tiny, deterministic parser to avoid locale/float issues
     let b = s.as_bytes();
     let mut i = 0usize;
     let neg = if !b.is_empty() && b[0] == b'-' {

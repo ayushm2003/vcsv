@@ -10,7 +10,6 @@ use vcsv_lib::{Backend, Input, Op, PublicValues};
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
 pub const VCSV_ELF: &[u8] = include_elf!("vcsv-program");
 
-/// Execute the CSV program without generating a proof
 pub fn execute(file: PathBuf, op: Op, col: String) {
     let client = ProverClient::from_env();
     let mut stdin = SP1Stdin::new();
@@ -48,7 +47,6 @@ pub fn execute(file: PathBuf, op: Op, col: String) {
     println!("decimal points: {:?}", decimal_points);
 }
 
-/// Generate a proof for the CSV program
 pub fn proof(
     file: PathBuf,
     op: Op,
@@ -78,7 +76,6 @@ pub fn proof(
 
     let (pk, _) = client.setup(VCSV_ELF);
 
-    // Generate the proof
     let proof = client
         .prove(&pk, &stdin)
         .compressed()
