@@ -126,6 +126,27 @@ pub fn parse_csv(csv: Vec<u8>, col: &str) -> Csv {
     }
 }
 
+pub fn merkelize(csv: Csv) {
+	let mut hashes: Vec<[u8; 32]> = csv.lines.iter().map(|line| {
+									let row_byes = line.join(",").as_bytes();
+									hash(row_byes)
+								}).collect();
+	
+	while hashes.len() > 1 {
+		let pairs = hashes.chunks(2);
+		hashes = pairs.map(|pair| {
+			let left = pair[0];
+			let right = if pair.len() == 2 { pair[1] } else { pair[0] };
+
+			let mut buf = [0u8; 64];
+			buf[..32].copy_from_slice(&left);
+			buf[32..].copy_from_slice(&right);
+
+			hash(buf)
+		}).collect();
+	}
+}
+
 pub fn trim_ascii(s: &str) -> &str {
     let bytes = s.as_bytes();
     let mut i = 0;
