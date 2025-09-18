@@ -17,6 +17,7 @@ pgo-data.profdata
 
 # Env
 .env
+key.env
 
 data.csv
 proof.json

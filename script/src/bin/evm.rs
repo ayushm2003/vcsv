@@ -95,6 +95,7 @@ fn create_proof_fixture(
         colHash,
         n_rows,
         result,
+        decimal_points,
     } = PublicValues::abi_decode(bytes).unwrap();
 
     // Create the testing fixture so we can test things end-to-end.

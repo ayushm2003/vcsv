@@ -11,6 +11,12 @@ pub enum Op {
     Hash,
 }
 
+#[derive(ValueEnum, Clone, Debug, Serialize, Deserialize)]
+pub enum Backend {
+    Cpu,
+    Network,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Input {
     pub csv: Vec<u8>,

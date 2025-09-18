@@ -4,9 +4,8 @@
 
 use alloy_sol_types::SolType;
 use sp1_sdk::{include_elf, ProverClient, SP1Stdin};
-use std::fs;
-use std::path::PathBuf;
-use vcsv_lib::{Input, Op, PublicValues};
+use std::{env::set_var, fs, path::PathBuf};
+use vcsv_lib::{Backend, Input, Op, PublicValues};
 
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
 pub const VCSV_ELF: &[u8] = include_elf!("vcsv-program");
@@ -50,7 +49,21 @@ pub fn execute(file: PathBuf, op: Op, col: String) {
 }
 
 /// Generate a proof for the CSV program
-pub fn proof(file: PathBuf, op: Op, col: String, out: PathBuf) {
+pub fn proof(
+    file: PathBuf,
+    op: Op,
+    col: String,
+    out: PathBuf,
+    backend: Backend,
+    pkey: Option<String>,
+) {
+    match backend {
+        Backend::Cpu => set_var("SP1_PROVER", "cpu"),
+        Backend::Network => {
+            set_var("SP1_PROVER", "network");
+            set_var("NETWORK_PRIVATE_KEY", pkey.unwrap());
+        }
+    }
     let client = ProverClient::from_env();
     let mut stdin = SP1Stdin::new();
 
@@ -68,6 +81,7 @@ pub fn proof(file: PathBuf, op: Op, col: String, out: PathBuf) {
     // Generate the proof
     let proof = client
         .prove(&pk, &stdin)
+        .compressed()
         .run()
         .expect("failed to generate proof");
 

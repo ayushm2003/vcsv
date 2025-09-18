@@ -12,7 +12,7 @@ name = "vkey"
 path = "src/bin/vkey.rs"
 
 [dependencies]
-sp1-sdk = "5.0.8"
+sp1-sdk = { version = "5.2.1", default-features = false, features = ["network"] }
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
 serde = { version = "1.0.200", default-features = false, features = ["derive"] }
 clap = { version = "4.0", features = ["derive", "env"] }
