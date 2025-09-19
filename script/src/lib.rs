@@ -9,7 +9,7 @@ use std::{env::set_var, fs, path::PathBuf};
 use vcsv_lib::{hash, parse_csv, Backend, Input, Op, PublicValues};
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct MerkleProof {
+pub struct InclusionProof {
     pub leaf: [u8; 32],
     pub siblings: Vec<[u8; 32]>,
 }
@@ -106,50 +106,59 @@ pub fn verify(file: PathBuf) {
     println!("Successfully verified proof!");
 }
 
-pub fn merkle_path(file: PathBuf, row_idx: usize) ->  MerkleProof {
-	let csv = parse_csv(fs::read(file).unwrap(), None);
+pub fn inclusion_proof(file: PathBuf, row_idx: usize) -> InclusionProof {
+    let csv = parse_csv(fs::read(file).unwrap(), None);
 
-	if row_idx >= csv.lines.len() {
-		panic!("row index out of bounds");
-	}
-	let mut i = row_idx;
+    if row_idx >= csv.lines.len() {
+        panic!("row index out of bounds");
+    }
+    let mut i = row_idx;
 
-	let mut hashes: Vec<[u8; 32]> = Vec::new();
+    let mut hashes: Vec<[u8; 32]> = Vec::new();
 
-	let mut levels: Vec<[u8; 32]> = csv.lines.iter().map(|line| {
-									let row = line.join(",");
-									hash(row.as_bytes())
-								}).collect();
-	
-	hashes.push(levels[i]);
+    let mut levels: Vec<[u8; 32]> = csv
+        .lines
+        .iter()
+        .map(|line| {
+            let row = line.join(",");
+            hash(row.as_bytes())
+        })
+        .collect();
 
-	while levels.len() > 1 {
-		let sibling_idx = 
-			if i % 2 == 0 {
-				if i + 1 < levels.len() { i + 1 } else { i }
-			} else {
-				i - 1
-			};
-		
-		hashes.push(levels[sibling_idx]);
+    hashes.push(levels[i]);
 
-		levels = levels.chunks(2).map(|pair| {
-			let left = pair[0];
-			let right = if pair.len() == 2 { pair[1] } else { pair[0] };
+    while levels.len() > 1 {
+        let sibling_idx = if i % 2 == 0 {
+            if i + 1 < levels.len() {
+                i + 1
+            } else {
+                i
+            }
+        } else {
+            i - 1
+        };
 
-			let mut buf = [0u8; 64];
-			buf[..32].copy_from_slice(&left);
-			buf[32..].copy_from_slice(&right);
+        hashes.push(levels[sibling_idx]);
 
-			hash(&buf)
-		}).collect();
-		
+        levels = levels
+            .chunks(2)
+            .map(|pair| {
+                let left = pair[0];
+                let right = if pair.len() == 2 { pair[1] } else { pair[0] };
 
-		i /= 2;
-	}
+                let mut buf = [0u8; 64];
+                buf[..32].copy_from_slice(&left);
+                buf[32..].copy_from_slice(&right);
 
-	MerkleProof {
-		leaf: hashes[0],
-		siblings: hashes[1..].to_vec(),
-	}
+                hash(&buf)
+            })
+            .collect();
+
+        i /= 2;
+    }
+
+    InclusionProof {
+        leaf: hashes[0],
+        siblings: hashes[1..].to_vec(),
+    }
 }

@@ -2,7 +2,7 @@
 sp1_zkvm::entrypoint!(main);
 
 use alloy_sol_types::SolType;
-use vcsv_lib::{hash, mean_col, op_to_u8, parse_csv, sum_col, merkelize, Input, Op, PublicValues};
+use vcsv_lib::{hash, mean_col, merkelize, op_to_u8, parse_csv, sum_col, Input, Op, PublicValues};
 
 pub fn main() {
     // Read an input to the program.
@@ -12,7 +12,7 @@ pub fn main() {
     let Input { csv, col, op } = sp1_zkvm::io::read::<Input>();
 
     let csv_cont = parse_csv(csv, Some(&col));
-	let file_root = merkelize(&csv_cont);
+    let file_root = merkelize(&csv_cont);
 
     let (n_rows, result, decimal_points) = match op {
         Op::Sum => sum_col(&csv_cont),

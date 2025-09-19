@@ -94,14 +94,13 @@ pub fn parse_csv(csv: Vec<u8>, col: Option<&str>) -> Csv {
         .map(|s| s.to_string())
         .collect();
 
-    let idx: usize= match col {
-		Some(c) => {
-			cols.iter().
-				position(|name| name == c)
-				.expect("column not found")
-		},
-		None => 0,
-	};
+    let idx: usize = match col {
+        Some(c) => cols
+            .iter()
+            .position(|name| name == c)
+            .expect("column not found"),
+        None => 0,
+    };
 
     // Parse all remaining lines into Vec<Vec<String>>
     let mut lines = Vec::new();
@@ -125,27 +124,33 @@ pub fn parse_csv(csv: Vec<u8>, col: Option<&str>) -> Csv {
     }
 }
 
-pub fn merkelize(csv: &Csv) -> [u8;32] {
-	let mut hashes: Vec<[u8; 32]> = csv.lines.iter().map(|line| {
-									let row = line.join(",");
-									hash(row.as_bytes())
-								}).collect();
-	
-	while hashes.len() > 1 {
-		let pairs = hashes.chunks(2);
-		hashes = pairs.map(|pair| {
-			let left = pair[0];
-			let right = if pair.len() == 2 { pair[1] } else { pair[0] };
+pub fn merkelize(csv: &Csv) -> [u8; 32] {
+    let mut hashes: Vec<[u8; 32]> = csv
+        .lines
+        .iter()
+        .map(|line| {
+            let row = line.join(",");
+            hash(row.as_bytes())
+        })
+        .collect();
 
-			let mut buf = [0u8; 64];
-			buf[..32].copy_from_slice(&left);
-			buf[32..].copy_from_slice(&right);
+    while hashes.len() > 1 {
+        let pairs = hashes.chunks(2);
+        hashes = pairs
+            .map(|pair| {
+                let left = pair[0];
+                let right = if pair.len() == 2 { pair[1] } else { pair[0] };
 
-			hash(&buf)
-		}).collect();
-	}
+                let mut buf = [0u8; 64];
+                buf[..32].copy_from_slice(&left);
+                buf[32..].copy_from_slice(&right);
 
-	hashes[0]
+                hash(&buf)
+            })
+            .collect();
+    }
+
+    hashes[0]
 }
 
 pub fn trim_ascii(s: &str) -> &str {
