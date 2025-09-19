@@ -3,9 +3,16 @@
 //! This library provides functions for executing and proving the vcsv program
 
 use alloy_sol_types::SolType;
+use serde::{Deserialize, Serialize};
 use sp1_sdk::{include_elf, ProverClient, SP1Stdin};
 use std::{env::set_var, fs, path::PathBuf};
 use vcsv_lib::{hash, parse_csv, Backend, Input, Op, PublicValues};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MerkleProof {
+    pub leaf: [u8; 32],
+    pub siblings: Vec<[u8; 32]>,
+}
 
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
 pub const VCSV_ELF: &[u8] = include_elf!("vcsv-program");
@@ -99,7 +106,7 @@ pub fn verify(file: PathBuf) {
     println!("Successfully verified proof!");
 }
 
-fn merkle_path(file: PathBuf, row_idx: usize) ->  Vec<[u8; 32]> {
+pub fn merkle_path(file: PathBuf, row_idx: usize) ->  MerkleProof {
 	let csv = parse_csv(fs::read(file).unwrap(), None);
 
 	if row_idx >= csv.lines.len() {
@@ -141,5 +148,8 @@ fn merkle_path(file: PathBuf, row_idx: usize) ->  Vec<[u8; 32]> {
 		i /= 2;
 	}
 
-	hashes
+	MerkleProof {
+		leaf: hashes[0],
+		siblings: hashes[1..].to_vec(),
+	}
 }

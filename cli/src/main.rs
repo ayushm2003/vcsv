@@ -1,7 +1,10 @@
 use clap::{Args, Parser, Subcommand};
 use std::path::PathBuf;
+use std::fs;
+use serde::{Serialize, Deserialize};
 use vcsv_lib::{Backend, Op};
-use vcsv_script::{execute, proof, verify};
+use vcsv_script::{execute, proof, verify, merkle_path};
+use hex::encode;
 
 #[derive(Parser)]
 #[command(name = "vcsv", version, about = "Verifiable CSV analytics")]
@@ -15,6 +18,7 @@ pub enum Command {
     Execute(ExecuteArgs),
     Prove(ProveArgs),
     Verify(VerifyArgs),
+	InclusionProof(InclusionProofArgs),
 }
 
 #[derive(Args, Debug)]
@@ -49,6 +53,22 @@ pub struct VerifyArgs {
     pub proof: PathBuf,
 }
 
+#[derive(Args, Debug)]
+pub struct InclusionProofArgs {
+	#[arg(long)]
+	file: PathBuf,
+	#[arg(long)]
+	row: u64,
+	#[arg(long)]
+    pub out: Option<PathBuf>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MerkleProof {
+    pub leaf: [u8; 32],
+    pub siblings: Vec<[u8; 32]>,
+}
+
 fn main() {
     let args = Cli::parse();
     println!("cmd={:?}", args.cmd);
@@ -64,5 +84,32 @@ fn main() {
             args.pkey,
         ),
         Command::Verify(args) => verify(args.proof),
+		Command::InclusionProof(args) => {
+			let proof = merkle_path(args.file, args.row as usize); // returns MerkleProof { leaf, siblings }
+		
+			#[derive(Serialize)]
+			struct ProofOut {
+				leaf: String,
+				siblings: Vec<String>,
+			}
+		
+			let out = ProofOut {
+				leaf: format!("0x{}", hex::encode(proof.leaf)),
+				siblings: proof
+					.siblings
+					.iter()
+					.map(|h| format!("0x{}", hex::encode(h)))
+					.collect(),
+			};
+		
+			let json = serde_json::to_string_pretty(&out).unwrap();
+		
+			match args.out {
+				Some(path) => {
+					fs::write(path, json).expect("couldn't write proof to file");
+				}
+				None => println!("{json}"),
+			}
+		}
     }
 }

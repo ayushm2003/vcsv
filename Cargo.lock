@@ -6364,6 +6364,9 @@ name = "vcsv-cli"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "hex",
+ "serde",
+ "serde_json",
  "vcsv-lib",
  "vcsv-script",
 ]
