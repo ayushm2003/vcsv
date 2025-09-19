@@ -83,7 +83,7 @@ pub fn hash(s: &[u8]) -> [u8; 32] {
     hash
 }
 
-pub fn parse_csv(csv: Vec<u8>, col: &str) -> Csv {
+pub fn parse_csv(csv: Vec<u8>, col: Option<&str>) -> Csv {
     let s = core::str::from_utf8(&csv).expect("csv not utf8");
     let mut lines_iter = s.split("\n");
 
@@ -93,16 +93,15 @@ pub fn parse_csv(csv: Vec<u8>, col: &str) -> Csv {
         .map(trim_ascii)
         .map(|s| s.to_string())
         .collect();
-    let mut target_idx = None;
 
-    for (i, name) in cols.iter().enumerate() {
-        if name == col {
-            target_idx = Some(i);
-            break;
-        }
-    }
-
-    let idx = target_idx.expect("col not found");
+    let idx: usize= match col {
+		Some(c) => {
+			cols.iter().
+				position(|name| name == c)
+				.expect("column not found")
+		},
+		None => 0,
+	};
 
     // Parse all remaining lines into Vec<Vec<String>>
     let mut lines = Vec::new();

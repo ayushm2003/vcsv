@@ -11,7 +11,7 @@ pub fn main() {
     // from the prover.
     let Input { csv, col, op } = sp1_zkvm::io::read::<Input>();
 
-    let csv_cont = parse_csv(csv, &col);
+    let csv_cont = parse_csv(csv, Some(&col));
 	let file_root = merkelize(&csv_cont);
 
     let (n_rows, result, decimal_points) = match op {
