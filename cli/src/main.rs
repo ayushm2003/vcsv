@@ -1,10 +1,12 @@
 use clap::{Args, Parser, Subcommand};
-use hex::encode;
+use hex::{decode, encode};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use vcsv_lib::{Backend, Op};
-use vcsv_script::{execute, inclusion_proof, proof, verify};
+use vcsv_script::{
+    execute, inclusion_proof, proof, verify, verify_inclusion, InclusionProofString,
+};
 
 #[derive(Parser)]
 #[command(name = "vcsv", version, about = "Verifiable CSV analytics")]
@@ -19,6 +21,7 @@ pub enum Command {
     Prove(ProveArgs),
     Verify(VerifyArgs),
     InclusionProof(InclusionProofArgs),
+    VerifyInclusion(VerifyInclusionArgs),
 }
 
 #[derive(Args, Debug)]
@@ -63,10 +66,14 @@ pub struct InclusionProofArgs {
     pub out: Option<PathBuf>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct InclusionProof {
-    pub leaf: [u8; 32],
-    pub siblings: Vec<[u8; 32]>,
+#[derive(Args, Debug)]
+pub struct VerifyInclusionArgs {
+    #[arg(long)]
+    pub root: String,
+    #[arg(long)]
+    pub proof: PathBuf,
+    #[arg(long)]
+    pub row: usize,
 }
 
 fn main() {
@@ -87,13 +94,7 @@ fn main() {
         Command::InclusionProof(args) => {
             let proof = inclusion_proof(args.file, args.row as usize); // returns MerkleProof { leaf, siblings }
 
-            #[derive(Serialize)]
-            struct ProofOut {
-                leaf: String,
-                siblings: Vec<String>,
-            }
-
-            let out = ProofOut {
+            let out = InclusionProofString {
                 leaf: format!("0x{}", hex::encode(proof.leaf)),
                 siblings: proof
                     .siblings
@@ -110,6 +111,19 @@ fn main() {
                 }
                 None => println!("{json}"),
             }
+        }
+        Command::VerifyInclusion(args) => {
+            let json = fs::read_to_string(&args.proof).expect("failed to read proof file");
+            let inc_proof: InclusionProofString =
+                serde_json::from_str(&json).expect("invalid proof JSON");
+
+            let mut root_arr = [0u8; 32];
+            let root_bytes = decode(args.root.trim_start_matches("0x")).expect("invalid root hex");
+            assert_eq!(root_bytes.len(), 32);
+            root_arr.copy_from_slice(&root_bytes);
+
+            let ok = verify_inclusion(&root_arr, inc_proof, args.row);
+            println!("{}", if ok { "verified!" } else { "failed :(" });
         }
     }
 }

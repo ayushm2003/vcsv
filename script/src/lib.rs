@@ -3,6 +3,7 @@
 //! This library provides functions for executing and proving the vcsv program
 
 use alloy_sol_types::SolType;
+use hex::decode;
 use serde::{Deserialize, Serialize};
 use sp1_sdk::{include_elf, ProverClient, SP1Stdin};
 use std::{env::set_var, fs, path::PathBuf};
@@ -12,6 +13,12 @@ use vcsv_lib::{hash, parse_csv, Backend, Input, Op, PublicValues};
 pub struct InclusionProof {
     pub leaf: [u8; 32],
     pub siblings: Vec<[u8; 32]>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct InclusionProofString {
+    pub leaf: String,
+    pub siblings: Vec<String>,
 }
 
 /// The ELF (executable and linkable format) file for the Succinct RISC-V zkVM.
@@ -161,4 +168,41 @@ pub fn inclusion_proof(file: PathBuf, row_idx: usize) -> InclusionProof {
         leaf: hashes[0],
         siblings: hashes[1..].to_vec(),
     }
+}
+
+pub fn verify_inclusion(root: &[u8; 32], inc_proof: InclusionProofString, row: usize) -> bool {
+    let mut i = row;
+
+    let mut leaf_bytes = [0u8; 32];
+    let decoded = decode(inc_proof.leaf.trim_start_matches("0x")).expect("invalid hex");
+    assert_eq!(decoded.len(), 32, "leaf not 32 bytes");
+
+    leaf_bytes.copy_from_slice(&decoded);
+
+    let mut running_hash = leaf_bytes;
+
+    for s in &inc_proof.siblings {
+        let mut sib = [0u8; 32];
+        let b = decode(s.trim_start_matches("0x")).expect("invalid hex");
+        assert_eq!(b.len(), 32, "sibling not 32 bytes");
+        sib.copy_from_slice(&b);
+
+        if i % 2 == 0 {
+            let mut buf = [0u8; 64];
+            buf[..32].copy_from_slice(&running_hash);
+            buf[32..].copy_from_slice(&sib);
+
+            running_hash = hash(&buf);
+        } else {
+            let mut buf = [0u8; 64];
+            buf[..32].copy_from_slice(&sib);
+            buf[32..].copy_from_slice(&running_hash);
+
+            running_hash = hash(&buf);
+        }
+
+        i /= 2;
+    }
+
+    running_hash == *root
 }
