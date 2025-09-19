@@ -90,7 +90,7 @@ fn create_proof_fixture(
     // Deserialize the public values.
     let bytes = proof.public_values.as_slice();
     let PublicValues {
-        fileHash,
+        fileRoot,
         op,
         colHash,
         n_rows,

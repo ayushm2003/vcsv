@@ -33,7 +33,7 @@ pub struct Csv {
 
 sol! {
     struct PublicValues {
-        bytes32 fileHash;
+        bytes32 fileRoot;
         uint8 op;
         bytes32 colHash;
         uint64 n_rows;
@@ -126,10 +126,10 @@ pub fn parse_csv(csv: Vec<u8>, col: &str) -> Csv {
     }
 }
 
-pub fn merkelize(csv: Csv) {
+pub fn merkelize(csv: &Csv) -> [u8;32] {
 	let mut hashes: Vec<[u8; 32]> = csv.lines.iter().map(|line| {
-									let row_byes = line.join(",").as_bytes();
-									hash(row_byes)
+									let row = line.join(",");
+									hash(row.as_bytes())
 								}).collect();
 	
 	while hashes.len() > 1 {
@@ -142,9 +142,11 @@ pub fn merkelize(csv: Csv) {
 			buf[..32].copy_from_slice(&left);
 			buf[32..].copy_from_slice(&right);
 
-			hash(buf)
+			hash(&buf)
 		}).collect();
 	}
+
+	hashes[0]
 }
 
 pub fn trim_ascii(s: &str) -> &str {

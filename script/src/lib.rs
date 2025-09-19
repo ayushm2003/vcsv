@@ -28,7 +28,7 @@ pub fn execute(file: PathBuf, op: Op, col: String) {
 
     let decoded = PublicValues::abi_decode(output.as_slice()).unwrap();
     let PublicValues {
-        fileHash,
+        fileRoot,
         op,
         colHash,
         n_rows,
@@ -36,7 +36,7 @@ pub fn execute(file: PathBuf, op: Op, col: String) {
         decimal_points,
     } = decoded;
 
-    println!("fileHash: {:?}", fileHash);
+    println!("fileRoot: {:?}", fileRoot);
     println!("op: {:?}", op);
     println!("colHash: {:?}", colHash);
     println!("n_rows: {:?}", n_rows);
