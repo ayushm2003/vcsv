@@ -1,6 +1,5 @@
 use clap::{Args, Parser, Subcommand};
-use hex::{decode, encode};
-use serde::{Deserialize, Serialize};
+use hex::decode;
 use std::fs;
 use std::path::PathBuf;
 use vcsv_lib::{Backend, Op};
