@@ -1,89 +1,54 @@
-# SP1 Project Template
+# vcsv – Verifiable CSV Analytics
 
-This is a template for creating an end-to-end [SP1](https://github.com/succinctlabs/sp1) project
-that can generate a proof of any RISC-V program.
+vcsv is a Rust command line tool that proves-succinctly-that you computed analytics over a CSV dataset without revealing the raw data.
+It uses Succinct’s SP1 zkVM to generate and verify zero-knowledge proofs.
 
-## Requirements
+## Features
 
-- [Rust](https://rustup.rs/)
-- [SP1](https://docs.succinct.xyz/docs/sp1/getting-started/install)
+- Zero-knowledge analytics – prove sum, mean, and other operations on a CSV column without exposing the file.
+- Merkle commitment – every CSV row is committed to a Merkle root so you can later prove that a specific row was part of the dataset.
+- Dual proving backends – run proofs locally (`--backend cpu`) or on the Succinct Prover Network (`--backend network`).
+- Inclusion proofs – generate and verify row-level Merkle inclusion proofs.
 
-## Running the Project
+## Installation
 
-There are 3 main ways to run this project: execute a program, generate a core proof, and
-generate an EVM-compatible proof.
+Requires Rust ≥1.73
+Clone the repo and install:
 
-### Build the Program
-
-The program is automatically built through `script/build.rs` when the script is built.
-
-### Execute the Program
-
-To run the program without generating a proof:
-
-```sh
-cd script
-cargo run --release -- --execute
+```
+cargo install --path cli
 ```
 
-This will execute the program and display the output.
+This builds the release binary and puts the vcsv executable in ~/.cargo/bin, so it’s available on your PATH.
 
-### Generate an SP1 Core Proof
+(You can also run without installing: `cargo run --release -- <subcommand> [flags]`.)
 
-To generate an SP1 [core proof](https://docs.succinct.xyz/docs/sp1/generating-proofs/proof-types#core-default) for your program:
+## Quick Start
 
-```sh
-cd script
-cargo run --release -- --prove
+1. Execute analytics
+
+```
+vcsv execute --file data.csv --op mean --col price
 ```
 
-### Generate an EVM-Compatible Proof
+2. Prove and Verify
 
-> [!WARNING]
-> You will need at least 16GB RAM to generate a Groth16 or PLONK proof. View the [SP1 docs](https://docs.succinct.xyz/docs/sp1/getting-started/hardware-requirements#local-proving) for more information.
-
-Generating a proof that is cheap to verify on the EVM (e.g. Groth16 or PLONK) is more intensive than generating a core proof.
-
-To generate a Groth16 proof:
-
-```sh
-cd script
-cargo run --release --bin evm -- --system groth16
+```
+vcsv prove --file data.csv --op mean --col price --out proof.json --backend network --pkey 0x...
 ```
 
-To generate a PLONK proof:
-
-```sh
-cargo run --release --bin evm -- --system plonk
+```
+vcsv verify --proof proof.json
 ```
 
-These commands will also generate fixtures that can be used to test the verification of SP1 proofs
-inside Solidity.
+3. Generate an inclusion proof
 
-### Retrieve the Verification Key
-
-To retrieve your `programVKey` for your on-chain contract, run the following command in `script`:
-
-```sh
-cargo run --release --bin vkey
+```
+vcsv inclusion-proof --file data.csv --row 5 --out proof.json
 ```
 
-## Using the Prover Network
+4. Verify an inclusion proof
 
-We highly recommend using the [Succinct Prover Network](https://docs.succinct.xyz/docs/network/introduction) for any non-trivial programs or benchmarking purposes. For more information, see the [key setup guide](https://docs.succinct.xyz/docs/network/developers/key-setup) to get started.
-
-To get started, copy the example environment file:
-
-```sh
-cp .env.example .env
 ```
-
-Then, set the `SP1_PROVER` environment variable to `network` and set the `NETWORK_PRIVATE_KEY`
-environment variable to your whitelisted private key.
-
-For example, to generate an EVM-compatible proof using the prover network, run the following
-command:
-
-```sh
-SP1_PROVER=network NETWORK_PRIVATE_KEY=... cargo run --release --bin evm
+vcsv verify-inclusion --root 0x... --proof proof.json --row 5
 ```
