@@ -23,7 +23,7 @@ This builds the release binary and puts the vcsv executable in ~/.cargo/bin, so 
 
 (You can also run without installing: `cargo run --release -- <subcommand> [flags]`.)
 
-## Quick Start
+## Usage
 
 1. Execute analytics
 
@@ -51,4 +51,20 @@ vcsv inclusion-proof --file data.csv --row 5 --out proof.json
 
 ```
 vcsv verify-inclusion --root 0x... --proof proof.json --row 5
+```
+
+## Examples
+
+[examples](examples) has some csv files to play with.
+
+```
+vcsv execute --file examples/tiny.csv --op mean --col price
+```
+
+```
+vcsv prove --file examples/tiny.csv --op mean --col price --out proof.json
+```
+
+```
+vcsv verify --proof proof.json
 ```

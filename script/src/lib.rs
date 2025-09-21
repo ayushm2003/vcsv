@@ -58,7 +58,7 @@ pub fn execute(file: PathBuf, op: Op, col: String) {
         "result: {:?}",
         result as f64 / 10_f64.powf(decimal_points as f64)
     );
-    println!("decimal points: {:?}", decimal_points);
+    // println!("decimal points: {:?}", decimal_points);
 }
 
 pub fn proof(
