@@ -26,7 +26,7 @@ pub enum Command {
 #[derive(Args, Debug)]
 pub struct ExecuteArgs {
     #[arg(long, value_enum)]
-    pub ops: Op,
+    pub op: Op,
     #[arg(long)]
     pub file: PathBuf,
     #[arg(long)]
@@ -36,7 +36,7 @@ pub struct ExecuteArgs {
 #[derive(Args, Debug)]
 pub struct ProveArgs {
     #[arg(long, value_enum)]
-    pub ops: Op,
+    pub op: Op,
     #[arg(long)]
     pub file: PathBuf,
     #[arg(long)]
@@ -80,10 +80,10 @@ fn main() {
     println!("cmd={:?}", args.cmd);
 
     match args.cmd {
-        Command::Execute(args) => execute(args.file, args.ops, args.col),
+        Command::Execute(args) => execute(args.file, args.op, args.col),
         Command::Prove(args) => proof(
             args.file,
-            args.ops,
+            args.op,
             args.col,
             args.out,
             args.backend,
