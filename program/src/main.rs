@@ -2,7 +2,7 @@
 sp1_zkvm::entrypoint!(main);
 
 use alloy_sol_types::SolType;
-use vcsv_lib::{hash, mean_col, merkelize, op_to_u8, parse_csv, sum_col, Input, Op, PublicValues};
+use vcsv_lib::{hash, mean_col, median_col, merkelize, op_to_u8, parse_csv, sum_col, Input, Op, PublicValues};
 
 pub fn main() {
     // Read an input to the program.
@@ -17,7 +17,7 @@ pub fn main() {
     let (n_rows, result, decimal_points) = match op {
         Op::Sum => sum_col(&csv_cont),
         Op::Mean => mean_col(&csv_cont),
-        _ => panic!("op not implemented yet"),
+		Op::Median => median_col(&csv_cont),
     };
 
     let col_bytes = col.as_bytes();

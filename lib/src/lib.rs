@@ -8,7 +8,6 @@ pub enum Op {
     Sum,
     Mean,
     Median,
-    Hash,
 }
 
 #[derive(ValueEnum, Clone, Debug, Serialize, Deserialize)]
@@ -72,6 +71,33 @@ pub fn mean_col(csv: &Csv) -> (u64, i128, u16) {
     let mean_scaled = mean_float.round() as i128;
 
     (n_rows, mean_scaled, decimal)
+}
+
+pub fn median_col(csv: &Csv) -> (u64, i128, u16) {
+	let mut elements = Vec::new();
+	for line in &csv.lines {
+		if line.is_empty() {
+            continue;
+        }
+		let v: i128 = parse_i128(&line[csv.idx]);
+		elements.push(v);
+	}
+
+	assert!(elements.len() != 0, "no elements");
+	elements.sort();
+
+	let mid = elements.len() / 2;
+	let median = if elements.len() % 2 == 1 {
+		elements[mid] as f64
+	} else {
+		(elements[mid - 1] as f64 + elements[mid] as f64) / 2.0
+	};
+
+	let decimal: u16 = 3;
+    let multiplier = 10_f64.powi(decimal as i32);
+    let median_scaled = (median * multiplier).round() as i128;
+
+	(elements.len() as u64, median_scaled, decimal)
 }
 
 pub fn hash(s: &[u8]) -> [u8; 32] {
@@ -171,7 +197,6 @@ pub fn op_to_u8(op: Op) -> u8 {
         Op::Sum => 0,
         Op::Mean => 1,
         Op::Median => 2,
-        Op::Hash => 3,
     }
 }
 
