@@ -1,14 +1,14 @@
 # vcsv
 
-vcsv is a Rust command line tool that proves-succinctly-that you computed analytics over a CSV dataset without revealing the raw data.
-It uses Succinct’s SP1 zkVM to generate and verify zero-knowledge proofs.
+vcsv is a Rust command line tool that proves that you computed analytics over a CSV dataset without revealing the raw data.
+It uses Succinct’s SP1 zkVM to generate and verify zero knowledge proofs.
 
 ## Features
 
-- Zero-knowledge analytics – prove sum, mean, and other operations on a CSV column without exposing the file.
+- Zero-knowledge analytics – prove sum, mean, median on a CSV column without exposing the file.
 - Merkle commitment – every CSV row is committed to a Merkle root so you can later prove that a specific row was part of the dataset.
 - Dual proving backends – run proofs locally (`--backend cpu`) or on the Succinct Prover Network (`--backend network`).
-- Inclusion proofs – generate and verify row-level Merkle inclusion proofs.
+- Inclusion proofs – generate and verify row level Merkle inclusion proofs.
 
 ## Installation
 
@@ -28,7 +28,7 @@ This builds the release binary and puts the vcsv executable in ~/.cargo/bin, so 
 1. Execute analytics
 
 ```
-vcsv execute --file data.csv --op mean --col price
+vcsv execute --file data.csv --op sum --col price
 ```
 
 2. Prove and Verify
@@ -62,9 +62,21 @@ vcsv execute --file examples/tiny.csv --op mean --col price
 ```
 
 ```
-vcsv prove --file examples/tiny.csv --op mean --col price --out proof.json
+vcsv prove --file examples/tiny.csv --op median --col price --out proof.json
 ```
 
 ```
 vcsv verify --proof proof.json
 ```
+
+## Running the tests
+
+The repository includes some tests for the merkle path and inclusion-proof logic.
+
+From the workspace root run:
+
+```
+cargo test -p vcsv-script
+```
+
+All tests should pass without any additional setup.
