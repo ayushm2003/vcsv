@@ -1,6 +1,6 @@
 # vcsv
 
-vcsv is a Rust command line tool that proves that you computed analytics over a CSV dataset without revealing the raw data.
+vcsv is a Rust command line tool that proves computed analytics over a CSV dataset without revealing the raw data.
 It uses Succinct’s SP1 zkVM to generate and verify zero knowledge proofs.
 
 ## Features
