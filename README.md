@@ -13,6 +13,7 @@ It uses Succinct’s SP1 zkVM to generate and verify zero knowledge proofs.
 ## Installation
 
 Requires Rust ≥1.73
+
 Clone the repo and install:
 
 ```
